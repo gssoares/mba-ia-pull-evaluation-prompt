@@ -273,6 +273,95 @@ python src/evaluate.py
 
 ---
 
+## Técnicas Aplicadas (Fase 2)
+
+### Técnicas Escolhidas
+
+Apliquei **4 técnicas avançadas** de Prompt Engineering no prompt otimizado `bug_to_user_story_v2.yml`:
+
+#### 1. **Role Prompting** 🎭
+**Justificativa:** O prompt original tinha uma definição de papel muito vaga ("assistente que ajuda"). Criei uma persona detalhada de um Product Manager Senior com experiência específica.
+
+**Implementação:**
+```yaml
+# PERSONA E CONTEXTO (Role Prompting)
+Você é um Product Manager Senior experiente com mais de 8 anos trabalhando em produtos digitais. 
+Você possui expertise em:
+- Análise de problemas técnicos e impacto no usuário
+- Criação de User Stories seguindo metodologias ágeis (Scrum/Kanban)  
+- Priorização baseada em valor e urgência
+- Comunicação clara entre usuários finais e equipes de desenvolvimento
+```
+
+**Por que escolhi:** Role Prompting cria contexto e autoridade, fazendo o LLM adotar uma mentalidade específica que resulta em respostas mais consistentes e profissionais.
+
+#### 2. **Few-shot Learning** 📚
+**Justificativa:** O prompt original não tinha exemplos, deixando o LLM sem referências claras do formato esperado.
+
+**Implementação:**
+- **2 exemplos completos** de bug reports com suas análises estruturadas
+- Exemplos cobrem cenários diferentes: bug crítico (login Safari) e performance (carregamento lento)
+- Cada exemplo mostra o processo completo de análise → user story → critérios de aceitação
+
+**Por que escolhi:** Few-shot Learning é uma das técnicas mais eficazes para prompts de formatação. Reduz significativamente variabilidade e melhora qualidade da saída.
+
+#### 3. **Skeleton of Thought** 🏗️
+**Justificativa:** O prompt original era desestruturado. Criei uma metodologia clara em 3 etapas obrigatórias.
+
+**Implementação:**
+```yaml
+## ETAPA 1: Análise do Problema
+- Identifique o problema central relatado
+- Determine o impacto no usuário (crítico, alto, médio, baixo)  
+- Identifique o tipo de usuário afetado
+
+## ETAPA 2: Definição da Solução
+- Defina o resultado desejado após a correção
+- Identifique critérios de aceitação técnicos
+- Considere casos edge que podem estar relacionados
+
+## ETAPA 3: Estruturação da User Story
+- Formato: "Como [tipo de usuário], eu quero [funcionalidade], para que [benefício]"
+- Adicione critérios de aceitação específicos e testáveis
+- Inclua notas técnicas relevantes para desenvolvedores
+```
+
+**Por que escolhi:** Skeleton of Thought garante completude e consistência. Cada análise seguirá a mesma estrutura lógica, melhorando métricas de formato e completude.
+
+#### 4. **Chain of Thought (CoT)** 🧠
+**Justificativa:** Análise de bugs requer raciocínio estruturado. Instruí o LLM a explicitar seu processo de pensamento.
+
+**Implementação:**
+- Seção "METODOLOGIA" com sequência específica de análise
+- Obrigatório mostrar todas as 3 etapas de raciocínio
+- Análise de impacto, casos edge e critérios técnicos explícitos
+
+**Por que escolhi:** CoT melhora qualidade do raciocínio e permite debug/iteração. O LLM não apenas gera a resposta, mas explica como chegou nela.
+
+### Melhorias Implementadas
+
+**Comparativo v1 → v2:**
+
+| Aspecto | v1 (Original) | v2 (Otimizado) |
+|---------|---------------|----------------|
+| **Papel** | "assistente que ajuda" | Product Manager Senior com 8+ anos |
+| **Estrutura** | Sem metodologia | 3 etapas obrigatórias |
+| **Exemplos** | Nenhum | 2 exemplos completos |
+| **Formato** | Vago | Markdown estruturado |
+| **Edge Cases** | Não tratados | Seção específica |
+| **Critérios** | Não especificados | Checkboxes testáveis |
+| **Técnicas** | Nenhuma | 4 técnicas aplicadas |
+
+### Resultados Esperados
+
+Com essas otimizações, espero atingir:
+- **Tone Score ≥ 0.9:** Role prompting profissional
+- **Format Score ≥ 0.9:** Skeleton of Thought + exemplos  
+- **Completeness Score ≥ 0.9:** Chain of Thought estruturado
+- **Acceptance Criteria Score ≥ 0.9:** Metodologia específica
+
+---
+
 ## Entregável
 
 1. **Repositório público no GitHub** (fork do repositório base) contendo:
