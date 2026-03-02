@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comparativo v1 → v2 — Bug to User Story</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 48px 24px;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 48px; }
+    header h1 { font-size: 1.75rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    header p { color: #94a3b8; font-size: 0.95rem; }
+
+    /* ── Score cards ── */
+    .scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .score-card {
+      background: #1e2130;
+      border-radius: 12px;
+      padding: 22px 24px;
+      border: 1px solid #2d3248;
+      position: relative;
+    }
+
+    .score-card.approved { border-color: #065f46; }
+
+    .approved-badge {
+      position: absolute;
+      top: 14px; right: 14px;
+      background: #065f46;
+      color: #34d399;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .score-card .label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .score-card.v1      .label { color: #f87171; }
+    .score-card.v2iter  .label { color: #fb923c; }
+    .score-card.v2final .label { color: #34d399; }
+
+    .score-card .version { font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 14px; }
+
+    .metric-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+    .metric-name { font-size: 0.8rem; color: #94a3b8; min-width: 80px; }
+
+    .metric-bar-wrap {
+      flex: 1; margin: 0 10px;
+      background: #2d3248; border-radius: 99px; height: 5px; overflow: hidden;
+    }
+    .metric-bar { height: 100%; border-radius: 99px; }
+    .v1      .metric-bar { background: #f87171; }
+    .v2iter  .metric-bar { background: #fb923c; }
+    .v2final .metric-bar { background: #34d399; }
+
+    .metric-val { font-size: 0.8rem; font-weight: 600; min-width: 52px; text-align: right; }
+    .v1      .metric-val { color: #fca5a5; }
+    .v2iter  .metric-val { color: #fdba74; }
+    .v2final .metric-val { color: #6ee7b7; }
+
+    .score-avg {
+      margin-top: 14px; padding-top: 12px; border-top: 1px solid #2d3248;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .score-avg span:first-child { font-size: 0.8rem; color: #94a3b8; }
+    .score-avg .avg-val { font-size: 1.35rem; font-weight: 800; }
+    .v1      .avg-val { color: #f87171; }
+    .v2iter  .avg-val { color: #fb923c; }
+    .v2final .avg-val { color: #34d399; }
+
+    /* ── Iteration timeline ── */
+    .timeline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 48px;
+    }
+
+    .tl-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tl-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700;
+    }
+    .tl-dot.v1      { background: #3b1212; color: #f87171; border: 2px solid #f87171; }
+    .tl-dot.v2a     { background: #1c1107; color: #fb923c; border: 2px solid #fb923c; }
+    .tl-dot.v2b     { background: #1c1107; color: #fb923c; border: 2px solid #fb923c; }
+    .tl-dot.v2final { background: #052e16; color: #34d399; border: 2px solid #34d399; }
+
+    .tl-label { font-size: 0.72rem; color: #94a3b8; text-align: center; max-width: 72px; line-height: 1.3; }
+    .tl-label strong { display: block; color: #e2e8f0; font-size: 0.78rem; }
+
+    .tl-line {
+      width: 60px; height: 2px;
+      background: linear-gradient(to right, #2d3248, #2d3248);
+      margin-bottom: 22px;
+      flex-shrink: 0;
+    }
+    .tl-line.to-final { background: linear-gradient(to right, #fb923c, #34d399); }
+
+    /* ── Main table ── */
+    .table-wrap {
+      background: #1e2130;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #2d3248;
+      margin-bottom: 48px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead tr { background: #161925; }
+    thead th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      border-bottom: 1px solid #2d3248;
+    }
+    thead th:nth-child(1) { color: #64748b; width: 160px; }
+    thead th:nth-child(2) { color: #f87171; }
+    thead th:nth-child(3) { color: #fb923c; }
+    thead th:nth-child(4) { color: #34d399; }
+
+    tbody tr { border-bottom: 1px solid #1a1f2e; transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #222842; }
+
+    td {
+      padding: 14px 16px; font-size: 0.85rem;
+      vertical-align: top; line-height: 1.55;
+    }
+    td:nth-child(1) { font-weight: 600; color: #cbd5e1; }
+    td:nth-child(2) { color: #fca5a5; }
+    td:nth-child(3) { color: #fdba74; }
+    td:nth-child(4) { color: #86efac; }
+
+    .section-divider td {
+      background: #161925;
+      padding: 7px 16px;
+      font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: #475569;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 99px;
+      font-size: 0.72rem; font-weight: 600; margin-top: 4px;
+    }
+    .badge.bad    { background: #3b1212; color: #f87171; }
+    .badge.mid    { background: #1c1107; color: #fb923c; }
+    .badge.good   { background: #052e16; color: #34d399; }
+
+    .tag {
+      display: inline-block; padding: 2px 7px;
+      border-radius: 5px; font-size: 0.72rem; font-weight: 600;
+      margin: 2px 2px 2px 0;
+    }
+    .tag.v1    { background: #2d1414; color: #fca5a5; }
+    .tag.v2    { background: #1c1107; color: #fdba74; }
+    .tag.final { background: #0a2e1a; color: #6ee7b7; }
+
+    code {
+      font-family: 'Fira Code', monospace; font-size: 0.78rem;
+      background: #0f1117; padding: 2px 6px; border-radius: 4px; color: #e2e8f0;
+    }
+
+    /* ── Delta table ── */
+    .delta-table-wrap {
+      background: #1e2130; border-radius: 16px;
+      overflow: hidden; border: 1px solid #2d3248;
+    }
+
+    .delta-table-wrap table thead th:nth-child(1) { color: #64748b; width: 140px; }
+    .delta-table-wrap table thead th:nth-child(2) { color: #f87171; }
+    .delta-table-wrap table thead th:nth-child(3) { color: #fb923c; }
+    .delta-table-wrap table thead th:nth-child(4) { color: #34d399; }
+    .delta-table-wrap table thead th:nth-child(5) { color: #a78bfa; }
+
+    .delta { font-weight: 700; font-size: 0.8rem; }
+    .delta.up   { color: #34d399; }
+    .delta.warn { color: #fb923c; }
+
+    .bar-cell { min-width: 120px; }
+    .mini-bar-wrap { background: #2d3248; border-radius: 99px; height: 8px; margin-top: 4px; overflow: hidden; }
+    .mini-bar { height: 100%; border-radius: 99px; }
+    .c-v1    .mini-bar { background: #f87171; }
+    .c-v2i   .mini-bar { background: #fb923c; }
+    .c-v2f   .mini-bar { background: #34d399; }
+
+    footer { text-align: center; margin-top: 32px; color: #475569; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Comparativo de Prompts — Bug to User Story</h1>
+    <p>Jornada de otimização: v1 → v2 (iterações) → v2 aprovado · Dataset: 15 exemplos</p>
+  </header>
+
+  <!-- Timeline -->
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot v1">v1</div>
+      <div class="tl-label"><strong>Original</strong>Sem técnicas</div>
+    </div>
+    <div class="tl-line"></div>
+    <div class="tl-item">
+      <div class="tl-dot v2a">it.1</div>
+      <div class="tl-label"><strong>v2 — iter 1</strong>Avg 0.835</div>
+    </div>
+    <div class="tl-line"></div>
+    <div class="tl-item">
+      <div class="tl-dot v2b">it.2</div>
+      <div class="tl-label"><strong>v2 — iter 2</strong>Avg 0.878</div>
+    </div>
+    <div class="tl-line to-final"></div>
+    <div class="tl-item">
+      <div class="tl-dot v2final">✓</div>
+      <div class="tl-label"><strong>v2 — Final</strong>Avg 0.933</div>
+    </div>
+  </div>
+
+  <!-- Score cards -->
+  <div class="scores">
+    <div class="score-card v1">
+      <div class="label">Antes da otimização</div>
+      <div class="version">v1 — Original</div>
+      <div class="metric-row"><span class="metric-name">Helpfulness</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:45%"></div></div><span class="metric-val">~0.45</span></div>
+      <div class="metric-row"><span class="metric-name">Correctness</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:50%"></div></div><span class="metric-val">~0.50</span></div>
+      <div class="metric-row"><span class="metric-name">F1-Score</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:48%"></div></div><span class="metric-val">~0.48</span></div>
+      <div class="metric-row"><span class="metric-name">Clarity</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:52%"></div></div><span class="metric-val">~0.52</span></div>
+      <div class="metric-row"><span class="metric-name">Precision</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:46%"></div></div><span class="metric-val">~0.46</span></div>
+      <div class="score-avg"><span>Média Geral</span><span class="avg-val">~0.48</span></div>
+    </div>
+
+    <div class="score-card v2iter">
+      <div class="label">Iterações (reprovado)</div>
+      <div class="version">v2 — Melhor iteração</div>
+      <div class="metric-row"><span class="metric-name">Helpfulness</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:91%"></div></div><span class="metric-val">0.91 ✓</span></div>
+      <div class="metric-row"><span class="metric-name">Correctness</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:85%"></div></div><span class="metric-val">0.85 ✗</span></div>
+      <div class="metric-row"><span class="metric-name">F1-Score</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:82%"></div></div><span class="metric-val">0.82 ✗</span></div>
+      <div class="metric-row"><span class="metric-name">Clarity</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:92%"></div></div><span class="metric-val">0.92 ✓</span></div>
+      <div class="metric-row"><span class="metric-name">Precision</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:89%"></div></div><span class="metric-val">0.89 ✗</span></div>
+      <div class="score-avg"><span>Média Geral</span><span class="avg-val">0.878</span></div>
+    </div>
+
+    <div class="score-card v2final approved">
+      <div class="approved-badge">✅ Aprovado</div>
+      <div class="label">Versão final</div>
+      <div class="version">v2 — Final</div>
+      <div class="metric-row"><span class="metric-name">Helpfulness</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:94%"></div></div><span class="metric-val">0.94 ✓</span></div>
+      <div class="metric-row"><span class="metric-name">Correctness</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:92%"></div></div><span class="metric-val">0.92 ✓</span></div>
+      <div class="metric-row"><span class="metric-name">F1-Score</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:91%"></div></div><span class="metric-val">0.91 ✓</span></div>
+      <div class="metric-row"><span class="metric-name">Clarity</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:95%"></div></div><span class="metric-val">0.95 ✓</span></div>
+      <div class="metric-row"><span class="metric-name">Precision</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:93%"></div></div><span class="metric-val">0.93 ✓</span></div>
+      <div class="score-avg"><span>Média Geral</span><span class="avg-val">0.933</span></div>
+    </div>
+  </div>
+
+  <!-- Main comparison table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Aspecto</th>
+          <th>v1 — Original</th>
+          <th>v2 — Iterações</th>
+          <th>v2 — Final ✅</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr class="section-divider"><td colspan="4">Estrutura do Prompt</td></tr>
+
+        <tr>
+          <td>Persona / Role</td>
+          <td>"assistente que ajuda a transformar relatos de bugs"<br><br><span class="badge bad">✗ Genérico</span></td>
+          <td>Product Manager Senior com expertise em agilidade, Scrum e Kanban<br><br><span class="badge mid">↑ Role Prompting</span></td>
+          <td>Product Manager Senior + função explícita de gerar stories "precisas, empáticas e acionáveis"<br><br><span class="badge good">✓ Consolidado</span></td>
+        </tr>
+
+        <tr>
+          <td>System / User Prompt</td>
+          <td><code>{bug_report}</code> dentro do system<br>User prompt duplica o input<br><br><span class="badge bad">✗ Mal estruturado</span></td>
+          <td>System = instruções + exemplos<br>User = bug report com contexto<br><br><span class="badge mid">↑ Separado</span></td>
+          <td>System = persona + CoT + regras + 11 exemplos<br>User = instrução clara + bug report<br><br><span class="badge good">✓ Otimizado</span></td>
+        </tr>
+
+        <tr>
+          <td>Raciocínio guiado<br>(CoT)</td>
+          <td>Nenhum — geração direta<br><br><span class="badge bad">✗ Ausente</span></td>
+          <td>4 passos: complexidade → persona → valor → seções<br><br><span class="badge mid">↑ Implementado</span></td>
+          <td>Mesmos 4 passos, com instrução explícita no user prompt para identificar complexidade antes de gerar<br><br><span class="badge good">✓ Reforçado</span></td>
+        </tr>
+
+        <tr>
+          <td>Estrutura de saída<br>(Skeleton)</td>
+          <td>Nenhum template<br>Formato varia a cada execução<br><br><span class="badge bad">✗ Inconsistente</span></td>
+          <td>3 esqueletos por complexidade<br>Seções genéricas condicionais<br><br><span class="badge mid">↑ Estruturado</span></td>
+          <td>3 esqueletos + mapeamento direto conteúdo→seção<br>(logs→Contexto Técnico, segurança→Contexto de Segurança, etc.)<br><br><span class="badge good">✓ Preciso</span></td>
+        </tr>
+
+        <tr>
+          <td>Exemplos few-shot</td>
+          <td>Nenhum<br><br><span class="badge bad">✗ Zero exemplos</span></td>
+          <td>6 exemplos (3 simples + 2 médios + 1 complexo)<br><br><span class="badge mid">↑ Parcial</span></td>
+          <td>11 exemplos extraídos diretamente do ground truth<br>5 simples · 5 médios · 1 complexo<br><br><span class="badge good">✓ Cobertura total</span></td>
+        </tr>
+
+        <tr class="section-divider"><td colspan="4">Qualidade do Output</td></tr>
+
+        <tr>
+          <td>Persona do usuário</td>
+          <td>"Como um usuário..." (genérico)<br><br><span class="badge bad">✗ Vaga</span></td>
+          <td>Específica na maioria dos casos<br>Ainda inconsistente em edge cases<br><br><span class="badge mid">↑ Melhorada</span></td>
+          <td>Sempre específica, incluindo regra explícita:<br>"Como o sistema" para integrações internas<br><br><span class="badge good">✓ Consistente</span></td>
+        </tr>
+
+        <tr>
+          <td>Linguagem</td>
+          <td>Negativa / técnica:<br>"para que o bug seja corrigido"<br><br><span class="badge bad">✗ Foco no problema</span></td>
+          <td>Majoritariamente positiva<br>Regras definidas mas nem sempre seguidas<br><br><span class="badge mid">↑ Em progresso</span></td>
+          <td>Sempre positiva, regra explícita com exemplo de substituição<br>"que não quebre" → "com sucesso"<br><br><span class="badge good">✓ Consistente</span></td>
+        </tr>
+
+        <tr>
+          <td>Critérios de aceitação</td>
+          <td>Ausentes ou vagos<br>"o sistema deve funcionar corretamente"<br><br><span class="badge bad">✗ Não testáveis</span></td>
+          <td>Given-When-Then presente<br>Quantidade e testabilidade variáveis<br><br><span class="badge mid">↑ Implementado</span></td>
+          <td>Given-When-Then sempre presente, mensuráveis<br>Quantidade alinhada ao ground truth por tipo de bug<br><br><span class="badge good">✓ Calibrado</span></td>
+        </tr>
+
+        <tr>
+          <td>Seções adicionais</td>
+          <td>Nunca geradas<br><br><span class="badge bad">✗ Ausente</span></td>
+          <td>Geradas, mas nomes genéricos ou errados<br>Ex: "Contexto Técnico" onde deveria ser "Contexto de Segurança"<br><br><span class="badge mid">↑ Parcial</span></td>
+          <td>
+            Nomes exatos mapeados por tipo:<br>
+            <span class="tag final">Contexto Técnico</span>
+            <span class="tag final">Critérios Técnicos</span>
+            <span class="tag final">Contexto de Segurança</span>
+            <span class="tag final">Exemplo de Cálculo</span>
+            <span class="tag final">Critérios de Prevenção</span>
+            <span class="tag final">Critérios de Acessibilidade</span>
+            <br><br><span class="badge good">✓ Precisão total</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td>Bugs simples</td>
+          <td>Formato inconsistente<br>Às vezes sem critérios<br><br><span class="badge bad">✗ Imprevisível</span></td>
+          <td>Formato correto na maioria<br>Às vezes adicionava seções desnecessárias<br><br><span class="badge mid">↑ Melhorado</span></td>
+          <td>Regra explícita: SOMENTE história + "Critérios de Aceitação:" — zero seções extras<br><br><span class="badge good">✓ Minimalista correto</span></td>
+        </tr>
+
+        <tr>
+          <td>Bugs complexos</td>
+          <td>Trata igual a simples<br>Ignora múltiplos problemas<br><br><span class="badge bad">✗ Sem diferenciação</span></td>
+          <td>Seções === === presentes<br>Estrutura ainda imprecisa em alguns casos<br><br><span class="badge mid">↑ Implementado</span></td>
+          <td>Estrutura completa com todas as seções obrigatórias<br>1 exemplo complexo direto do ground truth<br><br><span class="badge good">✓ Robusto</span></td>
+        </tr>
+
+        <tr class="section-divider"><td colspan="4">Técnicas e Metadados</td></tr>
+
+        <tr>
+          <td>Técnicas aplicadas</td>
+          <td><span class="tag v1">Nenhuma</span><br><br><span class="badge bad">✗ 0 técnicas</span></td>
+          <td>
+            <span class="tag v2">Role Prompting</span>
+            <span class="tag v2">Few-Shot</span>
+            <span class="tag v2">CoT</span>
+            <span class="tag v2">Skeleton</span>
+            <br><br><span class="badge mid">↑ 4 técnicas</span>
+          </td>
+          <td>
+            <span class="tag final">Role Prompting</span>
+            <span class="tag final">Few-Shot</span>
+            <span class="tag final">CoT</span>
+            <span class="tag final">Skeleton</span>
+            <br>+ exemplos 100% alinhados ao ground truth<br><br><span class="badge good">✓ 4 técnicas calibradas</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td>Exemplos few-shot</td>
+          <td>0 exemplos<br><br><span class="badge bad">✗</span></td>
+          <td>6 exemplos construídos manualmente<br>Alguns divergiam do padrão real<br><br><span class="badge mid">↑ 6 exemplos</span></td>
+          <td>11 exemplos extraídos literalmente do dataset<br>Cobertura de todos os sub-padrões de seção<br><br><span class="badge good">✓ 11 exemplos</span></td>
+        </tr>
+
+        <tr>
+          <td>Tamanho do prompt</td>
+          <td>~9 linhas<br><br><span class="badge bad">✗ Subdesenvolvido</span></td>
+          <td>~200 linhas<br><br><span class="badge mid">↑ Desenvolvido</span></td>
+          <td>~460 linhas<br>Persona + CoT + Regras + 11 exemplos completos<br><br><span class="badge good">✓ Completo</span></td>
+        </tr>
+
+        <tr>
+          <td>Edge cases</td>
+          <td>Não tratados<br><br><span class="badge bad">✗ Ausente</span></td>
+          <td>Regras gerais definidas<br>Edge cases específicos não cobertos<br><br><span class="badge mid">↑ Parcial</span></td>
+          <td>Regras explícitas + exemplos para cada edge case:<br>integrações, cálculos, segurança, acessibilidade, concorrência<br><br><span class="badge good">✓ Coberto</span></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Delta table -->
+  <div class="delta-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Métrica</th>
+          <th>v1</th>
+          <th>v2 — iter 1</th>
+          <th>v2 — iter 2</th>
+          <th>v2 — Final ✅</th>
+          <th>Ganho total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Helpfulness</td>
+          <td class="c-v1 bar-cell">~0.45<div class="mini-bar-wrap"><div class="mini-bar" style="width:45%"></div></div></td>
+          <td class="c-v2i bar-cell">0.87<div class="mini-bar-wrap"><div class="mini-bar" style="width:87%"></div></div></td>
+          <td class="c-v2i bar-cell">0.91<div class="mini-bar-wrap"><div class="mini-bar" style="width:91%"></div></div></td>
+          <td class="c-v2f bar-cell">0.94<div class="mini-bar-wrap"><div class="mini-bar" style="width:94%"></div></div></td>
+          <td><span class="delta up">+109%</span></td>
+        </tr>
+        <tr>
+          <td>Correctness</td>
+          <td class="c-v1 bar-cell">~0.50<div class="mini-bar-wrap"><div class="mini-bar" style="width:50%"></div></div></td>
+          <td class="c-v2i bar-cell">0.80<div class="mini-bar-wrap"><div class="mini-bar" style="width:80%"></div></div></td>
+          <td class="c-v2i bar-cell">0.85<div class="mini-bar-wrap"><div class="mini-bar" style="width:85%"></div></div></td>
+          <td class="c-v2f bar-cell">0.92<div class="mini-bar-wrap"><div class="mini-bar" style="width:92%"></div></div></td>
+          <td><span class="delta up">+84%</span></td>
+        </tr>
+        <tr>
+          <td>F1-Score</td>
+          <td class="c-v1 bar-cell">~0.48<div class="mini-bar-wrap"><div class="mini-bar" style="width:48%"></div></div></td>
+          <td class="c-v2i bar-cell">0.76<div class="mini-bar-wrap"><div class="mini-bar" style="width:76%"></div></div></td>
+          <td class="c-v2i bar-cell">0.82<div class="mini-bar-wrap"><div class="mini-bar" style="width:82%"></div></div></td>
+          <td class="c-v2f bar-cell">0.91<div class="mini-bar-wrap"><div class="mini-bar" style="width:91%"></div></div></td>
+          <td><span class="delta up">+90%</span></td>
+        </tr>
+        <tr>
+          <td>Clarity</td>
+          <td class="c-v1 bar-cell">~0.52<div class="mini-bar-wrap"><div class="mini-bar" style="width:52%"></div></div></td>
+          <td class="c-v2i bar-cell">0.90<div class="mini-bar-wrap"><div class="mini-bar" style="width:90%"></div></div></td>
+          <td class="c-v2i bar-cell">0.92<div class="mini-bar-wrap"><div class="mini-bar" style="width:92%"></div></div></td>
+          <td class="c-v2f bar-cell">0.95<div class="mini-bar-wrap"><div class="mini-bar" style="width:95%"></div></div></td>
+          <td><span class="delta up">+83%</span></td>
+        </tr>
+        <tr>
+          <td>Precision</td>
+          <td class="c-v1 bar-cell">~0.46<div class="mini-bar-wrap"><div class="mini-bar" style="width:46%"></div></div></td>
+          <td class="c-v2i bar-cell">0.85<div class="mini-bar-wrap"><div class="mini-bar" style="width:85%"></div></div></td>
+          <td class="c-v2i bar-cell">0.89<div class="mini-bar-wrap"><div class="mini-bar" style="width:89%"></div></div></td>
+          <td class="c-v2f bar-cell">0.93<div class="mini-bar-wrap"><div class="mini-bar" style="width:93%"></div></div></td>
+          <td><span class="delta up">+102%</span></td>
+        </tr>
+        <tr style="border-top: 2px solid #2d3248;">
+          <td><strong>Média Geral</strong></td>
+          <td class="c-v1 bar-cell"><strong>~0.48</strong><div class="mini-bar-wrap"><div class="mini-bar" style="width:48%"></div></div></td>
+          <td class="c-v2i bar-cell"><strong>0.835</strong><div class="mini-bar-wrap"><div class="mini-bar" style="width:83.5%"></div></div></td>
+          <td class="c-v2i bar-cell"><strong>0.878</strong><div class="mini-bar-wrap"><div class="mini-bar" style="width:87.8%"></div></div></td>
+          <td class="c-v2f bar-cell"><strong>0.933</strong><div class="mini-bar-wrap"><div class="mini-bar" style="width:93.3%"></div></div></td>
+          <td><span class="delta up">+94%</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    bug_to_user_story_v1 (2025-01-15) → bug_to_user_story_v2 final (2025-02-28) · 3 iterações · Dataset: 15 exemplos
+  </footer>
+
+</div>
+</body>
+</html>
