@@ -450,7 +450,7 @@ bug_to_user_story_v2:
     User Story gerada:
 
   # Metadados
-  version: "v2"
+  version: "v3"
   created_at: "2025-02-28"
   tags: ["bug-analysis", "user-story", "product-management", "optimized"]
   techniques:
