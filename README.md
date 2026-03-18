@@ -151,7 +151,7 @@ Após refatorar os prompts, você deve enviá-los de volta ao LangSmith Prompt H
 
 ### 4. Iteração
 
-- Espera-se 3-5 iterações.
+- Espera-se 3-6 iterações.
 - Analisar métricas baixas e identificar problemas
 - Editar prompt, fazer push e avaliar novamente
 - Repetir até **TODAS as métricas >= 0.9**
