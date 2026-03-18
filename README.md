@@ -235,40 +235,69 @@ desafio-prompt-engineer/
 - [LangSmith Documentation](https://docs.smith.langchain.com/)
 - [Prompt Engineering Guide](https://www.promptingguide.ai/)
 
-## VirtualEnv para Python
+## Como Executar (Validação)
 
-Crie e ative um ambiente virtual antes de instalar dependências:
+Como o prompt já está otimizado neste repositório, o fluxo abaixo é para quem deseja apenas validar os resultados.
+
+Observação: a **Fase 2 (Otimização do Prompt)** já foi concluída e não faz parte desta execução de validação.
+
+### 1. Pré-requisitos
+
+- Python 3.9 ou superior
+- Conta no LangSmith
+- Chave de API de um provedor LLM (OpenAI ou Gemini)
+
+### 2. Instalação de dependências
 
 ```bash
+# Linux/macOS
 python3 -m venv venv
-source venv/bin/activate  # No Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
----
-
-## Ordem de execução
-
-### 1. Executar pull dos prompts ruins
-
-```bash
-python src/pull_prompts.py
+```powershell
+# Windows (PowerShell)
+python -m venv venv
+venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
 
-### 2. Refatorar prompts
+Configure as variáveis de ambiente no arquivo `.env` com base no `.env.example`.
 
-Edite manualmente o arquivo `prompts/bug_to_user_story_v2.yml` aplicando as técnicas aprendidas no curso.
+### 3. Validação rápida (passo a passo)
 
-### 3. Fazer push dos prompts otimizados
+#### Passo 1: Conferir o artefato já otimizado
 
-```bash
-python src/push_prompts.py
-```
+Verifique o arquivo `prompts/bug_to_user_story_v2.yml`.
 
-### 5. Executar avaliação
+#### Passo 2: Executar a avaliação automática
 
 ```bash
 python src/evaluate.py
+```
+
+Resultado esperado: métricas de avaliação com valores >= 0.9 para a versão final.
+
+#### Passo 3: Executar os testes de validação
+
+```bash
+pytest tests/test_prompts.py
+```
+
+Resultado esperado: todos os testes passando.
+
+### 4. Evidências para conferência
+
+- Tabela comparativa: `comparativo_v1_v2.html`
+- Print da avaliação baixa (baseline): `eval_baixa.png`
+- Print da avaliação aprovada (final): `eval_aprovado.png`
+
+### 5. Comandos resumidos
+
+```bash
+python src/evaluate.py
+pytest tests/test_prompts.py
 ```
 
 ---
@@ -359,6 +388,13 @@ Com essas otimizações, espero atingir:
 - **Format Score ≥ 0.9:** Skeleton of Thought + exemplos  
 - **Completeness Score ≥ 0.9:** Chain of Thought estruturado
 - **Acceptance Criteria Score ≥ 0.9:** Metodologia específica
+
+## Resultados Finais
+
+- A tabela comparativa entre as versões do prompt (v1, iterações da v2 e v2 final) está no arquivo [comparativo_v1_v2.html](comparativo_v1_v2.html).
+- Os prints de avaliação estão nas imagens:
+   - [eval_baixa.png](eval_baixa.png)
+   - [eval_aprovado.png](eval_aprovado.png)
 
 ---
 
